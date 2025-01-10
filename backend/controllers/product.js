@@ -1,5 +1,6 @@
 const Product = require('../models/product.js');
 const ProductFilter = require('../utils/productFilter.js');
+const cloudinary = require('cloudinary');
 const allProducts = async (req, res) => {
     const resultPerPage = 10;
     const productFilter = new ProductFilter(Product.find(), req.query).search().filter().pagination(resultPerPage)
@@ -19,15 +20,39 @@ const detailProducts = async (req, res) => {
 }
 //admin
 const createProduct = async (req, res) => {
-    const product = await Product.create(req.body);
-    res.status(201).json({
-        product
-    })
+    let images = [];
+    if (typeof req.body.images === 'string') {
+        images.push(req.body.images)
+    } else {
+        images = req.body.images
+    }
+    let allImage = [];
+    for (let i = 0; i < images.length; i++) {
+        const result = await cloudinary.v2.uploader.upload(images[i], {
+            folder: "products"
+        });
+        allImage.push({
+            public_id: result.public_id,
+            url: result.secure_url
+
+        })
+
+    }
 
 }
+request.body.images = allImage
+const product = await Product.create(req.body);
+res.status(201).json({
+    product
+})
+
+
 const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
-    product.remove();
+    for (let i = 0; i < product.images.length; i++) {
+        await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+    }
+    await product.remove();
     res.status(200).json({
         message: "Ürün basarı ile silindi"
     })
