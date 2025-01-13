@@ -10,7 +10,12 @@ const allProducts = async (req, res) => {
     })
 
 }
-
+const adminProducts = async (req, res) => {
+    const products = await Product.find();
+    res.status(200).json({
+        products
+    })
+}
 const detailProducts = async (req, res) => {
     const product = await Product.findById(req.params.id);
     res.status(200).json({
@@ -19,7 +24,7 @@ const detailProducts = async (req, res) => {
 
 }
 //admin
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
     let images = [];
     if (typeof req.body.images === 'string') {
         images.push(req.body.images)
@@ -47,7 +52,7 @@ res.status(201).json({
 })
 
 
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     for (let i = 0; i < product.images.length; i++) {
         await cloudinary.v2.uploader.destroy(product.images[i].public_id);
@@ -58,12 +63,61 @@ const deleteProduct = async (req, res) => {
     })
 
 }
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
     const product = await Product.create(req.params.id);
-    product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    let images = [];
+    if (typeof req.body.images === 'string') {
+        images.push(req.body.images)
+    } else {
+        images = req.body.images
+    }
+
+    if (images !== undefined) {
+        for (let i = 0; i < product.images.length; i++) {
+            await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+        }
+    }
+    let allImage = [];
+    for (let i = 0; i < images.length; i++) {
+        const result = await cloudinary.v2.uploader.upload(images[i], {
+            folder: "products"
+        });
+        allImage.push({
+            public_id: result.public_id,
+            url: result.secure_url
+
+        })
+
+    }
+
+
+    request.body.images = allImage
+    product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     res.status(200).json({
         product
     })
 
 }
-module.exports = { allProducts, detailProducts, createProduct, deleteProduct, updateProduct };
+const createReview = async (req, res, next) => {
+    const { productId, comment, rating } = req.body;
+    const review = {
+        user: req.user._id,
+        name: req.user.name,
+        comment,
+        rating: Number(rating)
+    }
+    const product = await Product.findById(productId);
+    product.reviews.push(review);
+    let avg = 0;
+    product.reviews.forEach(rev => {
+        avg += rev.rating
+    })
+    product.rating = avg / product.reviews.length;
+    await product.save({ validateBeforeSave: false });
+    res.status(201).json({
+        message: "Yorum eklendi",
+        review
+    })
+
+}
+module.exports = { allProducts, detailProducts, createProduct, deleteProduct, updateProduct, createReview, adminProducts };
