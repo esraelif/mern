@@ -44,13 +44,13 @@ const createProduct = async (req, res, next) => {
 
     }
 
-}
-request.body.images = allImage
-const product = await Product.create(req.body);
-res.status(201).json({
-    product
-})
 
+    request.body.images = allImage
+    const product = await Product.create(req.body);
+    res.status(201).json({
+        product
+    })
+}
 
 const deleteProduct = async (req, res, next) => {
     const product = await Product.findById(req.params.id);
