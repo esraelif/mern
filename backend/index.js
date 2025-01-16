@@ -7,6 +7,8 @@ const db = require('./config/db.js');
 const product = require('./routes/product.js')
 const user = require('./routes/user.js')
 const cloudinary = require('cloudinary').v2;
+const bcrypt = require('bcryptjs');
+
 
 
 dotenv.config();
