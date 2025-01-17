@@ -86,13 +86,14 @@ const forgotPassword = async (req, res) => {
     }
     const resetToken = crypto.randomBytes(20).toString('hex');
     user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpire = new Date(Date.now() + 5 * 60 * 1000);
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
     const passwordUrl = `${req.protocol}://${req.get('host')}/reset/${resetToken}`
     const message = `Password reset token is ${passwordUrl}`
     try {
         const transporter = nodemailer.createTransport({
             port: 465,
+            service: "gmail",
             host: "smtp.gmail.com",
             auth: {
                 user: 'elifesratunca@gmail.com',
@@ -100,6 +101,15 @@ const forgotPassword = async (req, res) => {
             },
             secure: true
         });
+
+        const mailData = {
+            from: 'elifesratunca@gmail.com',
+            to: req.body.email,
+            subject: 'Şifre sıfırlama',
+            text: message,
+        }
+        await transporter.sendMail(mailData);
+        res.status(200).json({ message: "Reset password link sent to your email" });
     } catch (error) {
         user.resetPasswordToken = undefined;
         user.resetPasswordExpire = undefined;
@@ -109,7 +119,12 @@ const forgotPassword = async (req, res) => {
 
 }
 const resetPassword = async (req, res, next) => {
-
+    const resetPassword = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    const user = await User.findOne({ resetPasswordToken: resetPassword, resetPasswordExpire: { $gt: Date.now() } });
+    if (!user) {
+        return res.status(400).json({ message: "Token is invalid or expired" });
+    }
 }
+
 
 module.exports = { register, login, forgotPassword, resetPassword, logOut }
