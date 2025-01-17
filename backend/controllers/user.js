@@ -124,7 +124,22 @@ const resetPassword = async (req, res, next) => {
     if (!user) {
         return res.status(400).json({ message: "Token is invalid or expired" });
     }
+    user.password = request.body.password;
+    user.resetPasswordExpire = undefined;
+    user.resetPasswordToken = undefined;
+    await user.save({ validateBeforeSave: false });
+    const token = jwt.sign({ id: user._id }, "SECRETTOKEN", { expiresIn: "1h" })
+    res.status(200).cookie("token", token, cookieOptions).json({
+        user, token
+    });
+
+}
+const userDetails = async (req, res, next) => {
+    const user = await User.findById(req.params.id)
+    res.status(200).json({
+        user
+    })
 }
 
 
-module.exports = { register, login, forgotPassword, resetPassword, logOut }
+module.exports = { register, login, forgotPassword, resetPassword, logOut, userDetails }
