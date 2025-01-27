@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
     products: [],
+    product: {},
     loading: false,
 
 }
@@ -9,6 +10,13 @@ export const getProducts = createAsyncThunk(
     'products',
     async () => {
         const response = await fetch(`http://localhost:4000/products`)
+        return (await response.json());
+    },
+)
+export const getProductDetail = createAsyncThunk(
+    'products',
+    async (id) => {
+        const response = await fetch(`http://localhost:4000/products/${id}`)
         return (await response.json());
     },
 )
@@ -24,6 +32,13 @@ export const productSlice = createSlice({
         builder.addCase(getProducts.fulfilled, (state, action) => {
             state.loading = false;
             state.products = action.payload
+        })
+        builder.addCase(getProductDetail.pending, (state) => {
+            state.loading = true
+        })
+        builder.addCase(getProductDetail.fulfilled, (state, action) => {
+            state.loading = false;
+            state.product = action.payload
         })
     }
 })

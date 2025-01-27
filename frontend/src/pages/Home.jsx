@@ -9,23 +9,30 @@ const Home = () => {
     const { products, loading } = useSelector((state) => state.products);
 
     useEffect(() => {
-        dispatch(getProducts())
+        dispatch(getProducts());
+    }, [dispatch]);
 
-    }, [dispatch])
-    console.log(products, loading, "ürünler")
     return (
         <>
             {
-                loading ? "Loading..." : products?.products && <div className=''>
-                    {
-                        products?.products?.map((product, i) => {
-                            <ProductCard product={product} key={i} />
-                        })
-                    }
-                </div>
+                loading ? "Loading..." : (
+                    <div>
+                        {
+                            products?.products && (
+                                <div className='flex items-center justify-center gap-5 my-5 flex-wrap'>
+                                    {
+                                        products?.products?.map((product, i) => (
+                                            <ProductCard product={product} key={i} />
+                                        ))
+                                    }
+                                </div>
+                            )
+                        }
+                    </div>
+                )
             }
         </>
     );
-}
+};
 
 export default Home;
