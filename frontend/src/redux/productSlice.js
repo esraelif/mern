@@ -14,7 +14,7 @@ export const getProducts = createAsyncThunk(
     },
 )
 export const getProductDetail = createAsyncThunk(
-    'products',
+    'product',
     async (id) => {
         const response = await fetch(`http://localhost:4000/products/${id}`)
         return (await response.json());
