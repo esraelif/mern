@@ -14,6 +14,9 @@ const Home = () => {
 
     return (
         <>
+            <div>
+                <img className='h-[400px] w-full mt-0' src="https://th.bing.com/th/id/OIP.STWPlYiwT6bxHrSa1w0i2AHaEK?w=320&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7" alt="" />
+            </div>
             {
                 loading ? "Loading..." : (
                     <div>
